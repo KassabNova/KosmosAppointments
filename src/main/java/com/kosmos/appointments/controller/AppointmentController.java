@@ -45,6 +45,12 @@ public class AppointmentController {
     private DoctorRepo doctorRepo;
     @Autowired
     private RoomRepo roomRepo;
+
+    /**
+     * Create an appointment, validating it before.
+     * @param appointment the appointment to create
+     * @return The appointment info
+     */
     @PostMapping(value = "/", produces = "application/json")
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
         //appointment = new Appointment(new Date());
@@ -53,18 +59,32 @@ public class AppointmentController {
         return ResponseEntity.ok(test);
     }
 
+    /**
+     * Get an appointment by id
+     * @param id the appointment to search
+     * @return Search for an appointment by it's ID
+     */
     @GetMapping(value = "/{id}", produces = "application/json")
     public Appointment getAppointmentById(UUID id) {
 
         return appointmentRepo.findById(id).get();
     }
 
+    /**
+     * Return ALL appointments
+     * @return Return all appointments
+     */
     @GetMapping(value = "/", produces = "application/json")
     public List<Appointment> getAllAppointments() {
 
         return appointmentRepo.findAll();
     }
 
+    /**
+     * Get all the appointments that a doctor have, ordered by it's date
+     * @param  doctor, but only it's ID is required
+     * @return A list of appointments that belong to a specific doctor
+     */
     @GetMapping(value = "/doctor/{doctorId}", produces = "application/json")
     public List<Appointment> getAllAppointmentsForDoctor(Doctor doctor) {
 
@@ -73,18 +93,48 @@ public class AppointmentController {
         return appointments;
     }
 
+    /**
+     * Just a dummy method to init quickly
+     */
     @GetMapping(value = "/init", produces = "application/json")
     public void init() {
-        var doctor = Doctor.builder()
-                .firstName("Carlos")
-                .lastName("Kassab")
-                .specialization("Neurology")
-                .build();
-        var room = Room.builder()
-                .roomNumber("1")
-                .floor("PB")
-                .build();
-        doctorRepo.save(doctor);
-        roomRepo.save(room);
+
+        var doctors = List.of(
+                Doctor.builder()
+                        .firstName("Carlos")
+                        .lastName("Kassab")
+                        .specialization("Neurology")
+                        .build(),
+                Doctor.builder()
+                        .firstName("Joseph")
+                        .lastName("Sasson")
+                        .specialization("Cardiology")
+                        .build(),
+                Doctor.builder()
+                        .firstName("Pepe")
+                        .lastName("Grillo")
+                        .specialization("Traumatology")
+                        .build()
+                );
+        var rooms = List.of(
+                Room.builder()
+                        .roomNumber("1")
+                        .floor("PB")
+                        .build(),
+                Room.builder()
+                        .roomNumber("2")
+                        .floor("PB")
+                        .build(),
+                Room.builder()
+                        .roomNumber("1")
+                        .floor("1")
+                        .build(),
+                Room.builder()
+                        .roomNumber("2")
+                        .floor("1")
+                        .build());
+
+        doctorRepo.saveAll(doctors);
+        roomRepo.saveAll(rooms);
     }
 }

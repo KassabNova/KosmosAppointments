@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -51,5 +53,6 @@ public class Doctor {
     @Schema(example = "Neurologist")
     private String specialization;
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Appointment> doctorAppointments;
 }
