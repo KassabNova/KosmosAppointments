@@ -48,7 +48,8 @@ public class AppointmentController {
     private DoctorRepo doctorRepo;
     @Autowired
     private RoomRepo roomRepo;
-    private AppointmentLogic appointmentLogic = new AppointmentLogic();
+    @Autowired
+    private AppointmentLogic appointmentLogic = new AppointmentLogic(appointmentRepo, doctorRepo, roomRepo);
 
     /**
      * Create an appointment, validating it before.
@@ -101,11 +102,12 @@ public class AppointmentController {
     @GetMapping(value = "/doctor/{doctorId}", produces = "application/json")
     public ResponseEntity<List<Appointment>> getAllAppointmentsForDoctor(Doctor doctor) {
 
-        var doctorInfo = doctorRepo.findById(doctor.getId()).get();
-        List<Appointment> appointments = doctorInfo.getDoctorAppointments();
-        if(appointments.isEmpty()){
+        var doctorInfo = doctorRepo.findById(doctor.getId());
+        if(doctorInfo.isEmpty()){
             return ResponseEntity.notFound().build();
         }
+        List<Appointment> appointments = doctorInfo.get().getDoctorAppointments();
+
         return ResponseEntity.ok(appointments);
     }
 
@@ -117,11 +119,12 @@ public class AppointmentController {
     @GetMapping(value = "/room/{roomId}", produces = "application/json")
     public ResponseEntity<List<Appointment>> getAllAppointmentsForRoom(Room room) {
 
-        var roomInfo = roomRepo.findById(room.getId()).get();
-        List<Appointment> appointments = roomInfo.getRoomAppointments();
-        if(appointments.isEmpty()){
+        var roomInfo = roomRepo.findById(room.getId());
+        if(roomInfo.isEmpty()){
             return ResponseEntity.notFound().build();
         }
+        List<Appointment> appointments = roomInfo.get().getRoomAppointments();
+
         return ResponseEntity.ok(appointments);
     }
 

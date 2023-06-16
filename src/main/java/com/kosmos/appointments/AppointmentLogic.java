@@ -5,13 +5,30 @@
 
 package com.kosmos.appointments;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
 import com.kosmos.appointments.dto.Appointment;
+import com.kosmos.appointments.repository.AppointmentRepo;
+import com.kosmos.appointments.repository.DoctorRepo;
+import com.kosmos.appointments.repository.RoomRepo;
+
+import lombok.AllArgsConstructor;
 
 /**
  * Class Description goes here.
  * Created by ckassab on 16/06/23
  */
+@AllArgsConstructor
+@Service
 public class AppointmentLogic {
+
+    private AppointmentRepo appointmentRepo;
+    private DoctorRepo doctorRepo;
+    private RoomRepo roomRepo;
 
     public boolean isAppointmentValid(Appointment appointment) {
 
@@ -31,9 +48,19 @@ public class AppointmentLogic {
         return isAppointmentValid;
     }
 
-    private boolean isRoomAvailable(Appointment appointment){
+    private boolean isRoomAvailable(Appointment requestedAppointment){
 
-        return true;
+        var roomInfo = roomRepo.findById(requestedAppointment.consultingRoom.getId());
+        if(roomInfo.isEmpty()){
+            return true;
+        }
+        var roomAppointments = roomInfo.get().getRoomAppointments();
+
+        var isRoomAvailable = roomAppointments.stream()
+                .filter(appointment -> appointment == requestedAppointment)
+                .findFirst().isEmpty();
+
+        return isRoomAvailable;
     }
 
     private boolean isDoctorAvailable(Appointment appointment){
