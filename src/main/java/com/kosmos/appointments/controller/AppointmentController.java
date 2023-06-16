@@ -74,9 +74,13 @@ public class AppointmentController {
      * @return Search for an appointment by it's ID
      */
     @GetMapping(value = "/{id}", produces = "application/json")
-    public Appointment getAppointmentById(UUID id) {
-
-        return appointmentRepo.findById(id).get();
+    public ResponseEntity<Appointment> getAppointmentById(UUID id) {
+        var appointment = appointmentRepo.findById(id);
+        if(appointment.isPresent()){
+            return ResponseEntity.ok(appointment.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
@@ -95,11 +99,14 @@ public class AppointmentController {
      * @return A list of appointments that belong to a specific doctor
      */
     @GetMapping(value = "/doctor/{doctorId}", produces = "application/json")
-    public List<Appointment> getAllAppointmentsForDoctor(Doctor doctor) {
+    public ResponseEntity<List<Appointment>> getAllAppointmentsForDoctor(Doctor doctor) {
 
         var doctorInfo = doctorRepo.findById(doctor.getId()).get();
         List<Appointment> appointments = doctorInfo.getDoctorAppointments();
-        return appointments;
+        if(appointments.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(appointments);
     }
 
     /**
@@ -108,11 +115,14 @@ public class AppointmentController {
      * @return A list of appointments that belong to a specific room
      */
     @GetMapping(value = "/room/{roomId}", produces = "application/json")
-    public List<Appointment> getAllAppointmentsForRoom(Room room) {
+    public ResponseEntity<List<Appointment>> getAllAppointmentsForRoom(Room room) {
 
         var roomInfo = roomRepo.findById(room.getId()).get();
         List<Appointment> appointments = roomInfo.getRoomAppointments();
-        return appointments;
+        if(appointments.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(appointments);
     }
 
     /**
@@ -121,11 +131,14 @@ public class AppointmentController {
      * @return A list of appointments that belong to a specific day
      */
     @GetMapping(value = "/availability/", produces = "application/json")
-    public List<Appointment> getAllAppointmentsForDay(@RequestParam("day") Date date) {
+    public ResponseEntity<List<Appointment>> getAllAppointmentsForDay(@RequestParam("day") Date date) {
 
         //TODO Write the custom query to search by day
         List<Appointment> appointments = List.of();
-        return appointments;
+        if(appointments.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(appointments);
     }
 
     /**
