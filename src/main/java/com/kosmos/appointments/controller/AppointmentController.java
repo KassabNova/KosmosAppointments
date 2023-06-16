@@ -12,15 +12,18 @@ import java.util.UUID;
 import javax.print.Doc;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.kosmos.appointments.AppointmentLogic;
 import com.kosmos.appointments.dto.Appointment;
 
 import com.kosmos.appointments.dto.Doctor;
@@ -45,6 +48,7 @@ public class AppointmentController {
     private DoctorRepo doctorRepo;
     @Autowired
     private RoomRepo roomRepo;
+    private AppointmentLogic appointmentLogic = new AppointmentLogic();
 
     /**
      * Create an appointment, validating it before.
@@ -54,9 +58,14 @@ public class AppointmentController {
     @PostMapping(value = "/", produces = "application/json")
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
         //appointment = new Appointment(new Date());
-        //var test = new ResponseEntity<Appointment>(service.getAll(), HttpStatus.CREATED)
-        var test = appointmentRepo.save(appointment);
-        return ResponseEntity.ok(test);
+        Appointment createdAppointment = new Appointment();
+        if(appointmentLogic.isAppointmentValid(appointment)){
+            createdAppointment = appointmentRepo.save(appointment);
+
+        } else {
+            return ResponseEntity.badRequest().body(createdAppointment);
+        }
+        return ResponseEntity.ok(createdAppointment);
     }
 
     /**
@@ -90,6 +99,32 @@ public class AppointmentController {
 
         var doctorInfo = doctorRepo.findById(doctor.getId()).get();
         List<Appointment> appointments = doctorInfo.getDoctorAppointments();
+        return appointments;
+    }
+
+    /**
+     * Get all the appointments that a room has, ordered by it's date
+     * @param  room, but only it's ID is required
+     * @return A list of appointments that belong to a specific room
+     */
+    @GetMapping(value = "/room/{roomId}", produces = "application/json")
+    public List<Appointment> getAllAppointmentsForRoom(Room room) {
+
+        var roomInfo = roomRepo.findById(room.getId()).get();
+        List<Appointment> appointments = roomInfo.getRoomAppointments();
+        return appointments;
+    }
+
+    /**
+     * Get all the appointments that a doctor have, ordered by it's date
+     * @param  date, but only it's yyyy-mm-dd is used.
+     * @return A list of appointments that belong to a specific day
+     */
+    @GetMapping(value = "/availability/", produces = "application/json")
+    public List<Appointment> getAllAppointmentsForDay(@RequestParam("day") Date date) {
+
+        //TODO Write the custom query to search by day
+        List<Appointment> appointments = List.of();
         return appointments;
     }
 
