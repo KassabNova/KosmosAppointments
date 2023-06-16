@@ -6,23 +6,26 @@
 package com.kosmos.appointments.dto;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * Class Description goes here.
@@ -32,24 +35,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "appointments")
-public class Appointment {
+@Table(name = "rooms")
+@Builder
+@ToString(exclude = "roomAppointments")
+@EqualsAndHashCode(exclude = "roomAppointments")
+public class Room {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "ROOM_ID")
-    public Room consultingRoom;
-    @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "DOCTOR_ID")
-    public Doctor doctor;
-    @NotNull
-    public Date date;
-    @NotNull
-    public String patientName;
-
-
+    @Schema(example = "1")
+    private Integer id;
+    @Schema(example = "3")
+    private String roomNumber;
+    @Schema(example = "PB")
+    private String floor;
+    @OneToMany(mappedBy = "consultingRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appointment> roomAppointments;
 }

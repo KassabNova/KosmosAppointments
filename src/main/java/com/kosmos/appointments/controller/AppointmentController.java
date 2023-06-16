@@ -6,6 +6,10 @@
 package com.kosmos.appointments.controller;
 
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import javax.print.Doc;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,7 +23,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.kosmos.appointments.dto.Appointment;
 
-import com.kosmos.appointments.service.AppointmentService;
+import com.kosmos.appointments.dto.Doctor;
+import com.kosmos.appointments.dto.Room;
+import com.kosmos.appointments.repository.AppointmentRepo;
+import com.kosmos.appointments.repository.DoctorRepo;
+import com.kosmos.appointments.repository.RoomRepo;
 
 import jakarta.validation.Valid;
 
@@ -32,19 +40,51 @@ import jakarta.validation.Valid;
 public class AppointmentController {
 
     @Autowired
-    private AppointmentService service;
+    private AppointmentRepo appointmentRepo;
+    @Autowired
+    private DoctorRepo doctorRepo;
+    @Autowired
+    private RoomRepo roomRepo;
     @PostMapping(value = "/", produces = "application/json")
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
         //appointment = new Appointment(new Date());
         //var test = new ResponseEntity<Appointment>(service.getAll(), HttpStatus.CREATED)
-        return ResponseEntity.ok(appointment);
+        var test = appointmentRepo.save(appointment);
+        return ResponseEntity.ok(test);
     }
 
     @GetMapping(value = "/{id}", produces = "application/json")
-    public Appointment getAppointmentById(Integer id) {
+    public Appointment getAppointmentById(UUID id) {
 
-        var appointment = new Appointment();
-        appointment.date = new Date();
-        return appointment;
+        return appointmentRepo.findById(id).get();
+    }
+
+    @GetMapping(value = "/", produces = "application/json")
+    public List<Appointment> getAllAppointments() {
+
+        return appointmentRepo.findAll();
+    }
+
+    @GetMapping(value = "/doctor/{doctorId}", produces = "application/json")
+    public List<Appointment> getAllAppointmentsForDoctor(Doctor doctor) {
+
+        var doctorInfo = doctorRepo.findById(doctor.getId()).get();
+        List<Appointment> appointments = doctorInfo.getDoctorAppointments();
+        return appointments;
+    }
+
+    @GetMapping(value = "/init", produces = "application/json")
+    public void init() {
+        var doctor = Doctor.builder()
+                .firstName("Carlos")
+                .lastName("Kassab")
+                .specialization("Neurology")
+                .build();
+        var room = Room.builder()
+                .roomNumber("1")
+                .floor("PB")
+                .build();
+        doctorRepo.save(doctor);
+        roomRepo.save(room);
     }
 }
