@@ -43,7 +43,7 @@ public class Doctor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Schema(example = "0266e69d-329d-4f51-a935-8fb7cc1139ee")
+    @Schema(example = "b85a7588-1094-4311-835a-0b460d2f64cf")
     @NotNull
     private UUID id;
     @Schema(example = "Pancho")
