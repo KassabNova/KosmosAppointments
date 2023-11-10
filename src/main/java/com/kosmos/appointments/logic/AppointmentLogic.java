@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-package com.kosmos.appointments;
+package com.kosmos.appointments.logic;
 
 import org.springframework.stereotype.Service;
 
