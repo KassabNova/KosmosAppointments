@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Nextiva, Inc. to Present.
+ * Copyright (c) 2023 CKassab, Inc. to Present.
  * All rights reserved.
  */
 
@@ -8,75 +8,70 @@ package com.kosmos.appointments.controller;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import javax.print.Doc;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.kosmos.appointments.AppointmentLogic;
-import com.kosmos.appointments.dto.Appointment;
+import com.kosmos.appointments.dto.Reservation;
 
-import com.kosmos.appointments.dto.Doctor;
-import com.kosmos.appointments.dto.Room;
-import com.kosmos.appointments.repository.AppointmentRepo;
-import com.kosmos.appointments.repository.DoctorRepo;
-import com.kosmos.appointments.repository.RoomRepo;
-
-import jakarta.validation.Valid;
+import com.kosmos.appointments.dto.User;
+import com.kosmos.appointments.dto.Apartment;
+import com.kosmos.appointments.repository.ReservationRepo;
+import com.kosmos.appointments.repository.UserRepo;
+import com.kosmos.appointments.repository.ApartmentRepo;
 
 /**
  * Class Description goes here.
  * Created by ckassab on 16/06/23
  */
 @RestController
-@RequestMapping("/appointments")
-public class AppointmentController {
+@RequestMapping("/reservations")
+@Component
+public class ReservationController {
 
     @Autowired
-    private AppointmentRepo appointmentRepo;
+    private ReservationRepo reservationRepo;
     @Autowired
-    private DoctorRepo doctorRepo;
+    private UserRepo userRepo;
     @Autowired
-    private RoomRepo roomRepo;
-    @Autowired
-    private AppointmentLogic appointmentLogic = new AppointmentLogic(appointmentRepo, doctorRepo, roomRepo);
+    private ApartmentRepo apartmentRepo;
+    private AppointmentLogic appointmentLogic = new AppointmentLogic(reservationRepo, userRepo, apartmentRepo);
 
     /**
      * Create an appointment, validating it before.
-     * @param appointment the appointment to create
+     * @param reservation the appointment to create
      * @return The appointment info
      */
     @PostMapping(value = "/", produces = "application/json")
-    public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
+    public ResponseEntity<Reservation> createAppointment(@RequestBody Reservation reservation) {
         //appointment = new Appointment(new Date());
-        Appointment createdAppointment = new Appointment();
-        if(appointmentLogic.isAppointmentValid(appointment)){
-            createdAppointment = appointmentRepo.save(appointment);
+        Reservation createdReservation = new Reservation();
+        if(appointmentLogic.isAppointmentValid(reservation)){
+            createdReservation = reservationRepo.save(reservation);
 
         } else {
-            return ResponseEntity.badRequest().body(createdAppointment);
+            return ResponseEntity.badRequest().body(createdReservation);
         }
-        return ResponseEntity.ok(createdAppointment);
+        return ResponseEntity.ok(createdReservation);
     }
 
     /**
      * Get an appointment by id
      * @param id the appointment to search
-     * @return Search for an appointment by it's ID
+     * @return Search for an appointment by its ID
      */
     @GetMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<Appointment> getAppointmentById(UUID id) {
-        var appointment = appointmentRepo.findById(id);
+    public ResponseEntity<Reservation> getAppointmentById(UUID id) {
+        var appointment = reservationRepo.findById(id);
         if(appointment.isPresent()){
             return ResponseEntity.ok(appointment.get());
         } else {
@@ -89,59 +84,70 @@ public class AppointmentController {
      * @return Return all appointments
      */
     @GetMapping(value = "/", produces = "application/json")
-    public List<Appointment> getAllAppointments() {
+    public ResponseEntity<List<Reservation>> getAllAppointments() {
 
-        return appointmentRepo.findAll();
+        try {
+            return ResponseEntity.ok(reservationRepo.findAll());
+
+        } catch (Exception e){
+            return ResponseEntity.internalServerError().build();
+        }
+
     }
 
     /**
-     * Get all the appointments that a doctor have, ordered by it's date
-     * @param  doctor, but only it's ID is required
+     * Get all the appointments that a doctor have, ordered by its date
+     * @param  user, but only it's ID is required
      * @return A list of appointments that belong to a specific doctor
      */
     @GetMapping(value = "/doctor/{doctorId}", produces = "application/json")
-    public ResponseEntity<List<Appointment>> getAllAppointmentsForDoctor(Doctor doctor) {
+    public ResponseEntity<List<Reservation>> getAllAppointmentsForDoctor(User user) {
 
-        var doctorInfo = doctorRepo.findById(doctor.getId());
-        if(doctorInfo.isEmpty()){
+        var userInfo = userRepo.findById(user.getId());
+        if(userInfo.isEmpty()){
             return ResponseEntity.notFound().build();
         }
-        List<Appointment> appointments = doctorInfo.get().getDoctorAppointments();
+        List<Reservation> reservations = userInfo.get()
+                .getApartments()
+                .stream()
+                .map(Apartment::getReservations)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
 
-        return ResponseEntity.ok(appointments);
+        return ResponseEntity.ok(reservations);
     }
 
     /**
-     * Get all the appointments that a room has, ordered by it's date
-     * @param  room, but only it's ID is required
+     * Get all the appointments that a room has, ordered by its date
+     * @param  apartment, but only it's ID is required
      * @return A list of appointments that belong to a specific room
      */
     @GetMapping(value = "/room/{roomId}", produces = "application/json")
-    public ResponseEntity<List<Appointment>> getAllAppointmentsForRoom(Room room) {
+    public ResponseEntity<List<Reservation>> getAllAppointmentsForRoom(Apartment apartment) {
 
-        var roomInfo = roomRepo.findById(room.getId());
+        var roomInfo = apartmentRepo.findById(apartment.getId());
         if(roomInfo.isEmpty()){
             return ResponseEntity.notFound().build();
         }
-        List<Appointment> appointments = roomInfo.get().getRoomAppointments();
+        List<Reservation> reservations = roomInfo.get().getReservations();
 
-        return ResponseEntity.ok(appointments);
+        return ResponseEntity.ok(reservations);
     }
 
     /**
-     * Get all the appointments that a doctor have, ordered by it's date
+     * Get all the appointments that a doctor have, ordered by its date
      * @param  date, but only it's yyyy-mm-dd is used.
      * @return A list of appointments that belong to a specific day
      */
     @GetMapping(value = "/availability/", produces = "application/json")
-    public ResponseEntity<List<Appointment>> getAllAppointmentsForDay(@RequestParam("day") Date date) {
+    public ResponseEntity<List<Reservation>> getAllAppointmentsForDay(@RequestParam("day") Date date) {
 
         //TODO Write the custom query to search by day
-        List<Appointment> appointments = List.of();
-        if(appointments.isEmpty()){
+        List<Reservation> reservations = List.of();
+        if(reservations.isEmpty()){
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(appointments);
+        return ResponseEntity.ok(reservations);
     }
 
     /**
@@ -151,41 +157,38 @@ public class AppointmentController {
     public void init() {
 
         var doctors = List.of(
-                Doctor.builder()
+                User.builder()
                         .firstName("Carlos")
                         .lastName("Kassab")
-                        .specialization("Neurology")
                         .build(),
-                Doctor.builder()
+                User.builder()
                         .firstName("Joseph")
                         .lastName("Sasson")
-                        .specialization("Cardiology")
                         .build(),
-                Doctor.builder()
+                User.builder()
                         .firstName("Pepe")
                         .lastName("Grillo")
-                        .specialization("Traumatology")
                         .build()
                 );
         var rooms = List.of(
-                Room.builder()
+                Apartment.builder()
                         .roomNumber("1")
                         .floor("PB")
                         .build(),
-                Room.builder()
+                Apartment.builder()
                         .roomNumber("2")
                         .floor("PB")
                         .build(),
-                Room.builder()
+                Apartment.builder()
                         .roomNumber("1")
                         .floor("1")
                         .build(),
-                Room.builder()
+                Apartment.builder()
                         .roomNumber("2")
                         .floor("1")
                         .build());
 
-        doctorRepo.saveAll(doctors);
-        roomRepo.saveAll(rooms);
+        userRepo.saveAll(doctors);
+        apartmentRepo.saveAll(rooms);
     }
 }

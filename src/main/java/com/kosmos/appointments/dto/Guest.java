@@ -1,23 +1,25 @@
 /*
- * Copyright (c) 2023 Nextiva, Inc. to Present.
+ * Copyright (c) 2023 CKassab, Inc. to Present.
  * All rights reserved.
  */
 
 package com.kosmos.appointments.dto;
 
-import java.io.Serializable;
-import java.util.List;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -29,18 +31,18 @@ import lombok.ToString;
 
 /**
  * Class Description goes here.
- * Created by ckassab on 16/06/23
+ * Created by ckassab on 09/11/23
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "doctors")
+@Table(name = "guests")
 @Builder
-@ToString(exclude = "doctorAppointments")
-@EqualsAndHashCode(exclude = "doctorAppointments")
-public class Doctor {
-
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
+public class Guest {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Schema(example = "b85a7588-1094-4311-835a-0b460d2f64cf")
@@ -50,9 +52,8 @@ public class Doctor {
     private String firstName;
     @Schema(example = "Pistolas")
     private String lastName;
-    @Schema(example = "Neurologist")
-    private String specialization;
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Appointment> doctorAppointments;
+    @NotNull
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "RESERVATION_ID")
+    private Reservation reservation;
 }

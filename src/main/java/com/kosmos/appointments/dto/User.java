@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2023 Nextiva, Inc. to Present.
+ * Copyright (c) 2023 CKassab, Inc. to Present.
  * All rights reserved.
  */
 
 package com.kosmos.appointments.dto;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,8 +16,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -37,22 +34,23 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "rooms")
+@Table(name = "users")
 @Builder
-@ToString(exclude = "roomAppointments")
-@EqualsAndHashCode(exclude = "roomAppointments")
-public class Room {
+@ToString(exclude = "apartments")
+@EqualsAndHashCode(exclude = "apartments")
+public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Schema(example = "b85a7588-1094-4311-835a-0b460d2f64cf")
     @NotNull
-    @Schema(example = "1")
-    private Integer id;
-    @Schema(example = "3")
-    private String roomNumber;
-    @Schema(example = "PB")
-    private String floor;
-    @OneToMany(mappedBy = "consultingRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    private UUID id;
+    @Schema(example = "Pancho")
+    private String firstName;
+    @Schema(example = "Pistolas")
+    private String lastName;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<Appointment> roomAppointments;
+    private List<Apartment> apartments;
+
 }

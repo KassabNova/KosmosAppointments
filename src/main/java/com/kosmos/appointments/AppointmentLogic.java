@@ -1,20 +1,16 @@
 /*
- * Copyright (c) 2023 Nextiva, Inc. to Present.
+ * Copyright (c) 2023 CKassab, Inc. to Present.
  * All rights reserved.
  */
 
 package com.kosmos.appointments;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.kosmos.appointments.dto.Appointment;
-import com.kosmos.appointments.repository.AppointmentRepo;
-import com.kosmos.appointments.repository.DoctorRepo;
-import com.kosmos.appointments.repository.RoomRepo;
+import com.kosmos.appointments.dto.Reservation;
+import com.kosmos.appointments.repository.ReservationRepo;
+import com.kosmos.appointments.repository.UserRepo;
+import com.kosmos.appointments.repository.ApartmentRepo;
 
 import lombok.AllArgsConstructor;
 
@@ -26,49 +22,45 @@ import lombok.AllArgsConstructor;
 @Service
 public class AppointmentLogic {
 
-    private AppointmentRepo appointmentRepo;
-    private DoctorRepo doctorRepo;
-    private RoomRepo roomRepo;
+    private ReservationRepo reservationRepo;
+    private UserRepo userRepo;
+    private ApartmentRepo apartmentRepo;
 
-    public boolean isAppointmentValid(Appointment appointment) {
+    public boolean isAppointmentValid(Reservation reservation) {
 
         //There must be 4 validations
-        var isAppointmentValid = false;
+        var isAppointmentValid = isRoomAvailable(reservation) &&
+                isDoctorAvailable(reservation) &&
+                isPatientAvailable(reservation);
         //Validate there is no appointment at the same room at the same time
         //Validate the doctor has no other appointment at the requested time and does not have 8 or more appointments
         //Validate the patient has no other appointment two hours before or after this one
-
-        if(isRoomAvailable(appointment) &&
-                isDoctorAvailable(appointment) &&
-                isPatientAvailable(appointment)){
-            isAppointmentValid = true;
-        }
 
 
         return isAppointmentValid;
     }
 
-    private boolean isRoomAvailable(Appointment requestedAppointment){
+    private boolean isRoomAvailable(Reservation requestedReservation){
 
-        var roomInfo = roomRepo.findById(requestedAppointment.consultingRoom.getId());
+        var roomInfo = apartmentRepo.findById(requestedReservation.apartment.getId());
         if(roomInfo.isEmpty()){
             return true;
         }
-        var roomAppointments = roomInfo.get().getRoomAppointments();
+        var roomAppointments = roomInfo.get().getReservations();
 
         var isRoomAvailable = roomAppointments.stream()
-                .filter(appointment -> appointment == requestedAppointment)
+                .filter(appointment -> appointment == requestedReservation)
                 .findFirst().isEmpty();
 
         return isRoomAvailable;
     }
 
-    private boolean isDoctorAvailable(Appointment appointment){
+    private boolean isDoctorAvailable(Reservation reservation){
 
         return true;
     }
 
-    private boolean isPatientAvailable(Appointment appointment){
+    private boolean isPatientAvailable(Reservation reservation){
 
         return true;
     }
