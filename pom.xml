@@ -51,6 +51,18 @@
             <version>2.1.0</version>
         </dependency>
 
+        <!-- QR Code Generator -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.1</version>
+        </dependency>
+
         <!-- Other -->
         <dependency>
             <groupId>org.projectlombok</groupId>
