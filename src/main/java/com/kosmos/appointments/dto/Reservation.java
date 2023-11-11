@@ -53,7 +53,15 @@ public class Reservation {
     @JoinColumn(name = "APARTMENT_ID")
     public Apartment apartment;
     @NotNull
-    public Date date;
+    public Date startDate;
+    @NotNull
+    public Date endDate;
+    @NotNull
+    public Date aproxArrivalDate;
+    @NotNull
+    public Date checkIn;
+    @NotNull
+    public Date checkOut;
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     @NotNull
     public List<Guest> guests;

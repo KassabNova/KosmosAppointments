@@ -49,6 +49,8 @@ public class User {
     private String firstName;
     @Schema(example = "Pistolas")
     private String lastName;
+    @Schema(example = "true")
+    private Boolean isAdmin;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Apartment> apartments;
