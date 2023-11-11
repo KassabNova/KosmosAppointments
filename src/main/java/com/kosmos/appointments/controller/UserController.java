@@ -5,19 +5,26 @@
 
 package com.kosmos.appointments.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kosmos.appointments.dto.Apartment;
+import com.kosmos.appointments.dto.User;
 import com.kosmos.appointments.logic.AppointmentLogic;
 import com.kosmos.appointments.dto.Reservation;
 import com.kosmos.appointments.repository.ApartmentRepo;
 import com.kosmos.appointments.repository.ReservationRepo;
 import com.kosmos.appointments.repository.UserRepo;
+
+import lombok.AllArgsConstructor;
 
 /**
  * Class Description goes here.
@@ -26,31 +33,38 @@ import com.kosmos.appointments.repository.UserRepo;
 @RestController
 @RequestMapping("/users")
 @Component
+@AllArgsConstructor
 public class UserController {
 
-    @Autowired
-    private ReservationRepo reservationRepo;
-    @Autowired
     private UserRepo userRepo;
-    @Autowired
-    private ApartmentRepo apartmentRepo;
-    private AppointmentLogic appointmentLogic = new AppointmentLogic(reservationRepo, userRepo, apartmentRepo);
 
     /**
      * Create an appointment, validating it before.
-     * @param reservation the appointment to create
+     * @param user the appointment to create
      * @return The appointment info
      */
     @PostMapping(value = "/", produces = "application/json")
-    public ResponseEntity<Reservation> createAppointment(@RequestBody Reservation reservation) {
+    public ResponseEntity<User> createAppointment(@RequestBody User user) {
         //appointment = new Appointment(new Date());
-        Reservation createdReservation = new Reservation();
-        if(appointmentLogic.isAppointmentValid(reservation)){
-            createdReservation = reservationRepo.save(reservation);
-
+        User createdUser = new User();
+        if(true){
+            createdUser = userRepo.save(createdUser);
         } else {
-            return ResponseEntity.badRequest().body(createdReservation);
+            return ResponseEntity.badRequest().body(createdUser);
         }
-        return ResponseEntity.ok(createdReservation);
+        return ResponseEntity.ok(createdUser);
+    }
+
+    /**
+     * Return ALL users
+     * @return Return all Users based on login info
+     */
+    @GetMapping(value = "/", produces = "application/json")
+    public ResponseEntity<List<User>> getAllUsers() {
+        try {
+            return ResponseEntity.ok(userRepo.findAll());
+        } catch (Exception e){
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

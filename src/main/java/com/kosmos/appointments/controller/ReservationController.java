@@ -5,29 +5,31 @@
 
 package com.kosmos.appointments.controller;
 
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kosmos.appointments.dto.Guest;
 import com.kosmos.appointments.logic.AppointmentLogic;
 import com.kosmos.appointments.dto.Reservation;
 
 import com.kosmos.appointments.dto.User;
 import com.kosmos.appointments.dto.Apartment;
+import com.kosmos.appointments.repository.GuestRepo;
 import com.kosmos.appointments.repository.ReservationRepo;
 import com.kosmos.appointments.repository.UserRepo;
 import com.kosmos.appointments.repository.ApartmentRepo;
+
+import lombok.AllArgsConstructor;
 
 /**
  * Class Description goes here.
@@ -36,18 +38,17 @@ import com.kosmos.appointments.repository.ApartmentRepo;
 @RestController
 @RequestMapping("/reservations")
 @Component
+@AllArgsConstructor
 public class ReservationController {
 
-    @Autowired
     private ReservationRepo reservationRepo;
-    @Autowired
     private UserRepo userRepo;
-    @Autowired
+    private GuestRepo guestRepo;
     private ApartmentRepo apartmentRepo;
     private AppointmentLogic appointmentLogic = new AppointmentLogic(reservationRepo, userRepo, apartmentRepo);
 
     /**
-     * Create an appointment, validating it before.
+     * Create a reservation, validating it before.
      * @param reservation the appointment to create
      * @return The appointment info
      */
@@ -57,6 +58,13 @@ public class ReservationController {
         Reservation createdReservation = new Reservation();
         if(appointmentLogic.isAppointmentValid(reservation)){
             createdReservation = reservationRepo.save(reservation);
+
+            List<Guest> guests = reservation.getGuests();
+            Reservation finalCreatedReservation = createdReservation;
+            guests.stream().forEach(guest -> guest.setReservation(finalCreatedReservation));
+
+            var createdGuests = guestRepo.saveAll(guests);
+            createdReservation.setGuests(createdGuests);
 
         } else {
             return ResponseEntity.badRequest().body(createdReservation);
@@ -70,7 +78,7 @@ public class ReservationController {
      * @return Search for an appointment by its ID
      */
     @GetMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<Reservation> getAppointmentById(UUID id) {
+    public ResponseEntity<Reservation> getAppointmentById(@PathVariable UUID id) {
         var appointment = reservationRepo.findById(id);
         if(appointment.isPresent()){
             return ResponseEntity.ok(appointment.get());
@@ -97,13 +105,13 @@ public class ReservationController {
 
     /**
      * Get all the appointments that a doctor have, ordered by its date
-     * @param  user, but only it's ID is required
+     * @param  id, a user's UUID
      * @return A list of appointments that belong to a specific doctor
      */
-    @GetMapping(value = "/doctor/{doctorId}", produces = "application/json")
-    public ResponseEntity<List<Reservation>> getAllAppointmentsForDoctor(User user) {
+    @GetMapping(value = "/user/{id}", produces = "application/json")
+    public ResponseEntity<List<Reservation>> getAllAppointmentsForDoctor(@PathVariable UUID id) {
 
-        var userInfo = userRepo.findById(user.getId());
+        var userInfo = userRepo.findById(id);
         if(userInfo.isEmpty()){
             return ResponseEntity.notFound().build();
         }
@@ -118,12 +126,12 @@ public class ReservationController {
     }
 
     /**
-     * Get all the appointments that a room has, ordered by its date
+     * Get all the reservations for a specific apartment has, ordered by its date
      * @param  apartment, but only it's ID is required
      * @return A list of appointments that belong to a specific room
      */
-    @GetMapping(value = "/room/{roomId}", produces = "application/json")
-    public ResponseEntity<List<Reservation>> getAllAppointmentsForRoom(Apartment apartment) {
+    @GetMapping(value = "/apartment/{apartment}", produces = "application/json")
+    public ResponseEntity<List<Reservation>> getAllAppointmentsForRoom(@PathVariable Apartment apartment) {
 
         var roomInfo = apartmentRepo.findById(apartment.getId());
         if(roomInfo.isEmpty()){
@@ -131,22 +139,6 @@ public class ReservationController {
         }
         List<Reservation> reservations = roomInfo.get().getReservations();
 
-        return ResponseEntity.ok(reservations);
-    }
-
-    /**
-     * Get all the appointments that a doctor have, ordered by its date
-     * @param  date, but only it's yyyy-mm-dd is used.
-     * @return A list of appointments that belong to a specific day
-     */
-    @GetMapping(value = "/availability/", produces = "application/json")
-    public ResponseEntity<List<Reservation>> getAllAppointmentsForDay(@RequestParam("day") Date date) {
-
-        //TODO Write the custom query to search by day
-        List<Reservation> reservations = List.of();
-        if(reservations.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.ok(reservations);
     }
 

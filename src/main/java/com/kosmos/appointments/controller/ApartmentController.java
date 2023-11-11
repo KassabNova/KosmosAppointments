@@ -5,19 +5,22 @@
 
 package com.kosmos.appointments.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kosmos.appointments.logic.AppointmentLogic;
+import com.kosmos.appointments.dto.Apartment;
 import com.kosmos.appointments.dto.Reservation;
 import com.kosmos.appointments.repository.ApartmentRepo;
-import com.kosmos.appointments.repository.ReservationRepo;
-import com.kosmos.appointments.repository.UserRepo;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 /**
@@ -30,26 +33,52 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ApartmentController {
 
-    private ReservationRepo reservationRepo;
-    private UserRepo userRepo;
     private ApartmentRepo apartmentRepo;
-    private AppointmentLogic appointmentLogic = new AppointmentLogic(reservationRepo, userRepo, apartmentRepo);
 
     /**
      * Create an appointment, validating it before.
-     * @param reservation the appointment to create
+     * @param apartment the appointment to create
      * @return The appointment info
      */
     @PostMapping(value = "/", produces = "application/json")
-    public ResponseEntity<Reservation> createAppointment(@RequestBody Reservation reservation) {
+    public ResponseEntity<Apartment> createApartment(@Valid @RequestBody Apartment apartment) {
         //appointment = new Appointment(new Date());
-        Reservation createdReservation = new Reservation();
-        if(appointmentLogic.isAppointmentValid(reservation)){
-            createdReservation = reservationRepo.save(reservation);
-
+        Apartment createdApartment = new Apartment();
+        if(!apartment.getRoomNumber().isEmpty()){
+            createdApartment = apartmentRepo.save(apartment);
         } else {
-            return ResponseEntity.badRequest().body(createdReservation);
+            return ResponseEntity.badRequest().body(createdApartment);
         }
-        return ResponseEntity.ok(createdReservation);
+        return ResponseEntity.ok(createdApartment);
+    }
+
+    /**
+     * Get all the reservations for a specific apartment, ordered by its date
+     * @param  apartmentId, an apartment ID
+     * @return A list of appointments that belong to a specific room
+     */
+    @GetMapping(value = "/{apartmentId}", produces = "application/json")
+    public ResponseEntity<List<Reservation>> getAllAppointmentsForRoom(@PathVariable Integer apartmentId) {
+
+        var apartmentInfo = apartmentRepo.findById(apartmentId);
+        if(apartmentInfo.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        List<Reservation> reservations = apartmentInfo.get().getReservations();
+
+        return ResponseEntity.ok(reservations);
+    }
+
+    /**
+     * Return ALL guests
+     * @return Return all guests based on login info
+     */
+    @GetMapping(value = "/", produces = "application/json")
+    public ResponseEntity<List<Apartment>> getAllApartments() {
+        try {
+            return ResponseEntity.ok(apartmentRepo.findAll());
+        } catch (Exception e){
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

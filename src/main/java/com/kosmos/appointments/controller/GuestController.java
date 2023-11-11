@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kosmos.appointments.dto.Guest;
-import com.kosmos.appointments.dto.Reservation;
 import com.kosmos.appointments.logic.GuestLogic;
 import com.kosmos.appointments.repository.GuestRepo;
 
@@ -33,7 +32,7 @@ import lombok.AllArgsConstructor;
 public class GuestController {
 
     private GuestRepo guestRepo;
-    private GuestLogic guestLogic;
+    private GuestLogic guestLogic = new GuestLogic(guestRepo);
 
     /**
      * Create a guest registration for a reservation, validating it before inserting it.
@@ -72,7 +71,7 @@ public class GuestController {
      * @param guests the guests to associate to a reservation
      * @return The appointment info
      */
-    @PostMapping(value = "/", produces = "application/json")
+    @PostMapping(value = "/batch", produces = "application/json")
     public ResponseEntity<List<Guest>> createGuests(@RequestBody List<Guest> guests) {
         //var createdGuest = List.of(guests);
         return ResponseEntity.ok(guests);
