@@ -13,9 +13,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -51,7 +53,7 @@ public class User {
     private String lastName;
     @Schema(example = "true")
     private Boolean isAdmin;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "user", cascade = CascadeType.ALL,  fetch = FetchType.EAGER)
     @JsonIgnore
     private List<Apartment> apartments;
 
