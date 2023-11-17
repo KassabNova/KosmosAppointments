@@ -40,7 +40,7 @@ import lombok.AllArgsConstructor;
 @RequestMapping("/reservations")
 @Component
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class ReservationController {
 
     private ReservationRepo reservationRepo;
